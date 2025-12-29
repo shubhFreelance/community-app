@@ -72,6 +72,10 @@ const AdminDashboard = () => {
     const [showViewModal, setShowViewModal] = useState(false);
     const [viewingData, setViewingData] = useState(null);
 
+    // Custom Delete Modal state
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletingUserId, setDeletingUserId] = useState(null);
+
     const availablePermissions = [
         'verify_users',
         'view_funds',
@@ -167,12 +171,19 @@ const AdminDashboard = () => {
         }
     };
 
-    const handleDeleteUser = async (userId) => {
-        if (!window.confirm('Are you sure you want to delete this user? This action is permanent and will delete all associated data.')) return;
+    const handleDeleteClick = (userId) => {
+        setDeletingUserId(userId);
+        setShowDeleteModal(true);
+    };
+
+    const handleDeleteUser = async () => {
+        if (!deletingUserId) return;
 
         try {
-            await adminAPI.deleteUser(userId);
+            await adminAPI.deleteUser(deletingUserId);
             fetchUsers();
+            setShowDeleteModal(false);
+            setDeletingUserId(null);
             alert('User deleted successfully');
         } catch (err) {
             alert(err.response?.data?.message || 'Delete failed');
@@ -526,7 +537,7 @@ const AdminDashboard = () => {
                                                     <td className="table-actions">
                                                         <button className="view-mini-btn" onClick={() => handleViewUser(u)} disabled={actionLoading === u._id}>👁️ View</button>
                                                         <button className="edit-mini-btn" onClick={() => handleEditUser(u)}>✏️ Edit</button>
-                                                        <button className="delete-mini-btn" onClick={() => handleDeleteUser(u._id)}>🗑️ Delete</button>
+                                                        <button className="delete-mini-btn" onClick={() => handleDeleteClick(u._id)}>🗑️ Delete</button>
                                                     </td>
                                                 </tr>
                                             ))
@@ -962,6 +973,27 @@ const AdminDashboard = () => {
                                 >
                                     Close View
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Delete Confirmation Modal */}
+                {showDeleteModal && (
+                    <div className="modal-overlay">
+                        <div className="modal-content delete-modal">
+                            <div className="modal-header">
+                                <h3>🗑️ Confirm Deletion</h3>
+                                <button className="close-btn" onClick={() => setShowDeleteModal(false)}>×</button>
+                            </div>
+                            <div className="delete-modal-body">
+                                <div className="warning-icon">⚠️</div>
+                                <p>Are you sure you want to delete this user?</p>
+                                <p className="warning-text">This action is <strong>permanent</strong> and will delete all associated profile data, documents, and notifications.</p>
+                            </div>
+                            <div className="modal-actions delete-modal-actions">
+                                <button className="cancel-btn" onClick={() => setShowDeleteModal(false)}>No, Cancel</button>
+                                <button className="delete-confirm-btn" onClick={handleDeleteUser}>Yes, Delete Permanently</button>
                             </div>
                         </div>
                     </div>
