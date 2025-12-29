@@ -905,6 +905,31 @@
     box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
 }
 
+.status-select {
+    background: rgba(19, 70, 134, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+    padding: 0 16px;
+    height: 45px;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.status-select:hover,
+.status-select:focus {
+    background: rgba(19, 70, 134, 0.5);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.status-select option {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 10px;
+}
+
 /* Fund Export Controls */
 .export-controls {
     display: flex;

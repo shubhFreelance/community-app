@@ -76,6 +76,9 @@ const AdminDashboard = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deletingUserId, setDeletingUserId] = useState(null);
 
+    // Export Filter State
+    const [userStatusFilter, setUserStatusFilter] = useState('ALL');
+
     const availablePermissions = [
         'verify_users',
         'view_funds',
@@ -195,7 +198,7 @@ const AdminDashboard = () => {
         if (activeTab === 'users') {
             fetchUsers();
         }
-    }, [userSubTab, usersPage, activeTab]);
+    }, [userSubTab, usersPage, activeTab, userStatusFilter]);
 
     // Handle search with debounce conceptually (or just on enter/click for MVP)
     const handleSearch = (e) => {
@@ -228,12 +231,18 @@ const AdminDashboard = () => {
     const fetchUsers = async () => {
         setUsersLoading(true);
         try {
-            const res = await adminAPI.getAllUsers({
+            const params = {
                 role: userSubTab,
                 search: userSearch,
                 page: usersPage,
                 limit: 10
-            });
+            };
+
+            if (userStatusFilter !== 'ALL') {
+                params.status = userStatusFilter;
+            }
+
+            const res = await adminAPI.getAllUsers(params);
             setAllUsers(res.data.data);
             setUsersTotalPages(res.data.pages);
         } catch (err) {
@@ -299,8 +308,19 @@ const AdminDashboard = () => {
     const handleExportDetailedUsers = async () => {
         try {
             setActionLoading('export-detailed');
-            const res = await adminAPI.exportDetailedUsers({ role: userSubTab });
+
+            const params = { role: userSubTab };
+            if (userStatusFilter !== 'ALL') {
+                params.status = userStatusFilter;
+            }
+
+            const res = await adminAPI.exportDetailedUsers(params);
             const users = res.data.data;
+
+            if (users.length === 0) {
+                alert('No users found for the selected criteria.');
+                return;
+            }
 
             const excelData = users.map(u => ({
                 'Member ID': u.memberId,
@@ -340,7 +360,7 @@ const AdminDashboard = () => {
 
             const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
             const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            saveAs(blob, `community_members_${userSubTab.toLowerCase()}_${new Date().toISOString().split('T')[0]}.xlsx`);
+            saveAs(blob, `community_members_${userSubTab.toLowerCase()}_${userStatusFilter.toLowerCase()}_${new Date().toISOString().split('T')[0]}.xlsx`);
         } catch (err) {
             console.error(err);
             alert('Failed to export user list');
@@ -496,6 +516,23 @@ const AdminDashboard = () => {
                                 onChange={(e) => setUserSearch(e.target.value)}
                                 onKeyDown={handleSearch}
                             />
+
+                            <select
+                                className="status-select"
+                                value={userStatusFilter}
+                                onChange={(e) => {
+                                    setUserStatusFilter(e.target.value);
+                                    setUsersPage(1);
+                                }}
+                            >
+                                <option value="ALL">All Status</option>
+                                <option value="NEW">New (Registered)</option>
+                                <option value="FORM_SUBMITTED">Form Submitted</option>
+                                <option value="PENDING_VERIFICATION">Pending Verification</option>
+                                <option value="APPROVED">Approved Members</option>
+                                <option value="REJECTED">Rejected Users</option>
+                            </select>
+
                             <button
                                 className="export-btn excel"
                                 onClick={handleExportDetailedUsers}
