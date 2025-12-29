@@ -904,3 +904,78 @@
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
 }
+
+/* Fund Export Controls */
+.export-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.timeframe-select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.timeframe-select option {
+    background: #1a1a2e;
+}
+
+.export-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.export-btn.json {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #60a5fa;
+}
+
+.export-btn.json:hover {
+    background: rgba(59, 130, 246, 0.3);
+}
+
+.export-btn.excel {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #34d399;
+}
+
+.export-btn.excel:hover {
+    background: rgba(16, 185, 129, 0.3);
+}
+
+.export-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .content-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 16px;
+    }
+
+    .export-controls {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+}

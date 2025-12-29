@@ -12,12 +12,14 @@ const {
     getAnalytics,
     updateUser,
     deleteUser,
+    exportUsersDetailed,
 } = require('../controllers/adminController');
 const { protect, authorize, hasPermission } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
 // Super Admin only routes
 router.get('/users', protect, authorize('SUPER_ADMIN'), getAllUsers);
+router.get('/users/export', protect, authorize('SUPER_ADMIN'), exportUsersDetailed);
 router.get('/analytics', protect, authorize('SUPER_ADMIN'), getAnalytics);
 router.post('/managers', protect, authorize('SUPER_ADMIN'), createManager);
 router.get('/managers', protect, authorize('SUPER_ADMIN'), getAllManagers);

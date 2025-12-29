@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { fundAPI } from '../services/api';
+import { fundAPI, BASE_URL } from '../services/api';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import './Dashboard.css';
 import './Admin.css';
 
@@ -10,6 +12,8 @@ const AdminFundDashboard = () => {
     const navigate = useNavigate();
     const [fundDashboard, setFundDashboard] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [exportTimeframe, setExportTimeframe] = useState('30'); // '7', '30', 'all'
+    const [exportLoading, setExportLoading] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -23,6 +27,73 @@ const AdminFundDashboard = () => {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchTransactionsForExport = async () => {
+        let params = { limit: 2000 }; // Fetch a large batch for export
+
+        if (exportTimeframe !== 'all') {
+            const endDate = new Date().toISOString().split('T')[0];
+            const startDate = new Date(Date.now() - parseInt(exportTimeframe) * 24 * 60 * 60 * 1000)
+                .toISOString().split('T')[0];
+            params.startDate = startDate;
+            params.endDate = endDate;
+        }
+
+        const res = await fundAPI.getAllTransactions(params);
+        return res.data.data;
+    };
+
+    const handleExportJSON = async () => {
+        try {
+            setExportLoading(true);
+            const data = await fetchTransactionsForExport();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            saveAs(blob, `transactions_export_${exportTimeframe}days_${new Date().toISOString().split('T')[0]}.json`);
+        } catch (err) {
+            alert('Failed to export JSON');
+        } finally {
+            setExportLoading(false);
+        }
+    };
+
+    const handleExportExcel = async () => {
+        try {
+            setExportLoading(true);
+            const data = await fetchTransactionsForExport();
+
+            const excelData = data.map(t => ({
+                'Date': new Date(t.date).toLocaleDateString(),
+                'Description': t.description,
+                'Type': t.type === 'FUND_RECEIVED' ? 'Credit' : 'Debit',
+                'Amount (₹)': t.amount,
+                'Balance After (₹)': t.balanceAfterTransaction,
+                'Recorded By': t.createdBy?.email || 'N/A'
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
+
+            // Professional Styling (Column Widths)
+            const wscols = [
+                { wch: 15 }, // Date
+                { wch: 40 }, // Description
+                { wch: 10 }, // Type
+                { wch: 15 }, // Amount
+                { wch: 15 }, // Balance
+                { wch: 30 }, // Recorded By
+            ];
+            worksheet['!cols'] = wscols;
+
+            const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, `community_accounts_${exportTimeframe}days_${new Date().toISOString().split('T')[0]}.xlsx`);
+        } catch (err) {
+            alert('Failed to export Excel');
+        } finally {
+            setExportLoading(false);
         }
     };
 
@@ -53,6 +124,31 @@ const AdminFundDashboard = () => {
             <main className="main-content">
                 <header className="content-header">
                     <h1>Financial Dashboard</h1>
+                    <div className="export-controls">
+                        <select
+                            className="timeframe-select"
+                            value={exportTimeframe}
+                            onChange={(e) => setExportTimeframe(e.target.value)}
+                        >
+                            <option value="7">Last 7 Days</option>
+                            <option value="30">Last 30 Days</option>
+                            <option value="all">Overall History</option>
+                        </select>
+                        <button
+                            className="export-btn json"
+                            onClick={handleExportJSON}
+                            disabled={exportLoading}
+                        >
+                            {exportLoading ? '...' : '📥 JSON'}
+                        </button>
+                        <button
+                            className="export-btn excel"
+                            onClick={handleExportExcel}
+                            disabled={exportLoading}
+                        >
+                            {exportLoading ? '...' : '📁 Corporate Excel'}
+                        </button>
+                    </div>
                 </header>
 
                 <div className="tab-content">
@@ -91,7 +187,7 @@ const AdminFundDashboard = () => {
                                             <small>Balance: ₹{t.balanceAfterTransaction.toLocaleString()}</small>
                                         </div>
                                         {t.screenshotUrl && (
-                                            <a href={`http://localhost:5000${t.screenshotUrl}`} target="_blank" rel="noopener noreferrer" className="proof-link">
+                                            <a href={`${BASE_URL}${t.screenshotUrl}`} target="_blank" rel="noopener noreferrer" className="proof-link">
                                                 📷 View Receipt
                                             </a>
                                         )}

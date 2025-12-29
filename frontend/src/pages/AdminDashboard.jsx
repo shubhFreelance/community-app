@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI, fundAPI, profileAPI, BASE_URL } from '../services/api';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import './Dashboard.css';
 import './Admin.css';
 
@@ -283,6 +285,59 @@ const AdminDashboard = () => {
         }
     };
 
+    const handleExportDetailedUsers = async () => {
+        try {
+            setActionLoading('export-detailed');
+            const res = await adminAPI.exportDetailedUsers({ role: userSubTab });
+            const users = res.data.data;
+
+            const excelData = users.map(u => ({
+                'Member ID': u.memberId,
+                'Email': u.email,
+                'Phone': u.phone || u.profile?.phone || 'N/A',
+                'Role': u.role,
+                'Status': u.status,
+                'Full Name': u.profile?.fullName || 'N/A',
+                'Father\'s Name': u.profile?.fatherName || 'N/A',
+                'Date of Birth': u.profile?.dateOfBirth ? new Date(u.profile.dateOfBirth).toLocaleDateString() : 'N/A',
+                'Age': u.profile?.age || 'N/A',
+                'Gender': u.profile?.gender || 'N/A',
+                'Address': u.profile?.address || 'N/A',
+                'Joined At': new Date(u.createdAt).toLocaleDateString()
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Detailed User List");
+
+            // Standard Corporate Formatting (Column Widths)
+            const wscols = [
+                { wch: 15 }, // Member ID
+                { wch: 25 }, // Email
+                { wch: 15 }, // Phone
+                { wch: 12 }, // Role
+                { wch: 15 }, // Status
+                { wch: 25 }, // Full Name
+                { wch: 25 }, // Father's Name
+                { wch: 15 }, // DOB
+                { wch: 8 },  // Age
+                { wch: 10 }, // Gender
+                { wch: 40 }, // Address
+                { wch: 15 }, // Joined At
+            ];
+            worksheet['!cols'] = wscols;
+
+            const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, `community_members_${userSubTab.toLowerCase()}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        } catch (err) {
+            console.error(err);
+            alert('Failed to export user list');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
     const handleLogout = () => {
         logout();
         navigate('/login');
@@ -420,15 +475,24 @@ const AdminDashboard = () => {
                             <button className={`sub-tab-btn ${userSubTab === 'SUPER_ADMIN' ? 'active' : ''}`} onClick={() => { setUserSubTab('SUPER_ADMIN'); setUsersPage(1); }}>Admins</button>
                         </div>
 
-                        <div className="search-container">
+                        <div className="search-container" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                             <input
                                 type="text"
                                 className="search-input"
                                 placeholder="🔍 Search by ID, Email or Phone (Press Enter)"
+                                style={{ flex: 1 }}
                                 value={userSearch}
                                 onChange={(e) => setUserSearch(e.target.value)}
                                 onKeyDown={handleSearch}
                             />
+                            <button
+                                className="export-btn excel"
+                                onClick={handleExportDetailedUsers}
+                                disabled={actionLoading === 'export-detailed'}
+                                style={{ height: '45px', whiteSpace: 'nowrap' }}
+                            >
+                                {actionLoading === 'export-detailed' ? '⌛ Exporting...' : '📥 Export Detailed List'}
+                            </button>
                         </div>
 
                         {usersLoading ? (

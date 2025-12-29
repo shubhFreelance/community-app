@@ -81,15 +81,20 @@ exports.createExpenseEntry = async (req, res) => {
 // @access  Private (Super Admin / Manager with view_funds permission)
 exports.getAllTransactions = async (req, res) => {
     try {
-        const { type, month, year, page = 1, limit = 20 } = req.query;
+        const { type, month, year, startDate, endDate, page = 1, limit = 20 } = req.query;
 
         const query = {};
         if (type) query.type = type;
 
         if (month && year) {
-            const startDate = new Date(year, month - 1, 1);
-            const endDate = new Date(year, month, 0, 23, 59, 59);
-            query.date = { $gte: startDate, $lte: endDate };
+            const start = new Date(year, month - 1, 1);
+            const end = new Date(year, month, 0, 23, 59, 59);
+            query.date = { $gte: start, $lte: end };
+        } else if (startDate && endDate) {
+            query.date = {
+                $gte: new Date(startDate),
+                $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
+            };
         }
 
         const transactions = await Transaction.find(query)

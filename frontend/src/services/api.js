@@ -61,6 +61,7 @@ export const adminAPI = {
         headers: { 'Content-Type': 'multipart/form-data' },
     }),
     deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
+    exportDetailedUsers: (params) => api.get('/admin/users/export', { params }),
 };
 
 // Fund endpoints

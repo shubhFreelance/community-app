@@ -437,3 +437,52 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
+// @desc    Export all users with profiles
+// @route   GET /api/admin/users/export
+// @access  Private (Super Admin)
+exports.exportUsersDetailed = async (req, res) => {
+    try {
+        const { role, status } = req.query;
+        const query = {};
+        if (role) query.role = role;
+        if (status) query.status = status;
+
+        const users = await User.aggregate([
+            { $match: query },
+            {
+                $lookup: {
+                    from: 'profiles',
+                    localField: '_id',
+                    foreignField: 'user',
+                    as: 'profile'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$profile',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $project: {
+                    password: 0,
+                    __v: 0,
+                    'profile.__v': 0
+                }
+            },
+            { $sort: { createdAt: -1 } }
+        ]);
+
+        res.status(200).json({
+            success: true,
+            count: users.length,
+            data: users
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
+};
+
