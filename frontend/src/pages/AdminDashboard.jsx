@@ -76,6 +76,11 @@ const AdminDashboard = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deletingUserId, setDeletingUserId] = useState(null);
 
+    // Rejection Modal State
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [rejectReason, setRejectReason] = useState('');
+    const [rejectingUserId, setRejectingUserId] = useState(null);
+
     // Export Filter State
     const [userStatusFilter, setUserStatusFilter] = useState('ALL');
 
@@ -265,15 +270,27 @@ const AdminDashboard = () => {
         }
     };
 
-    const handleReject = async (userId) => {
-        const reason = prompt('Enter rejection reason:');
-        if (!reason) return;
+    const handleReject = (userId) => {
+        setRejectingUserId(userId);
+        setRejectReason('');
+        setShowRejectModal(true);
+    };
 
-        setActionLoading(userId);
+    const confirmRejection = async () => {
+        if (!rejectReason.trim()) {
+            alert('Please provide a rejection reason');
+            return;
+        }
+
+        setActionLoading(rejectingUserId);
         try {
-            await adminAPI.rejectUser(userId, reason);
-            setPendingUsers(prev => prev.filter(p => p.user._id !== userId));
+            await adminAPI.rejectUser(rejectingUserId, rejectReason);
+            setPendingUsers(prev => prev.filter(p => p.user._id !== rejectingUserId));
+            setShowRejectModal(false);
+            setRejectingUserId(null);
+            setRejectReason('');
             await loadData();
+            alert('User rejected and notified successfully');
         } catch (err) {
             alert(err.response?.data?.message || 'Failed to reject');
         } finally {
@@ -1031,6 +1048,40 @@ const AdminDashboard = () => {
                             <div className="modal-actions delete-modal-actions">
                                 <button className="cancel-btn" onClick={() => setShowDeleteModal(false)}>No, Cancel</button>
                                 <button className="delete-confirm-btn" onClick={handleDeleteUser}>Yes, Delete Permanently</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Rejection Reason Modal */}
+                {showRejectModal && (
+                    <div className="modal-overlay">
+                        <div className="modal-content reject-modal">
+                            <div className="modal-header">
+                                <h3>❌ Rejection Reason</h3>
+                                <button className="close-btn" onClick={() => setShowRejectModal(false)}>×</button>
+                            </div>
+                            <div className="modal-body reject-modal-body">
+                                <div className="info-icon">📝</div>
+                                <p>Please state why this member's application is being rejected. This reason will be visible to the user.</p>
+                                <textarea
+                                    className="rejection-textarea"
+                                    placeholder="Enter detailed reason for rejection..."
+                                    value={rejectReason}
+                                    onChange={(e) => setRejectReason(e.target.value)}
+                                    rows="4"
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="modal-actions">
+                                <button className="cancel-btn" onClick={() => setShowRejectModal(false)}>Cancel</button>
+                                <button
+                                    className="reject-confirm-btn"
+                                    onClick={confirmRejection}
+                                    disabled={actionLoading === rejectingUserId}
+                                >
+                                    {actionLoading === rejectingUserId ? '⌛ Processing...' : 'Confirm Rejection'}
+                                </button>
                             </div>
                         </div>
                     </div>

@@ -1062,6 +1062,73 @@
     background: rgba(255, 255, 255, 0.2);
 }
 
+/* Custom Rejection Modal */
+.reject-modal {
+    max-width: 500px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+}
+
+.reject-modal-body {
+    padding: 20px;
+    text-align: center;
+}
+
+.reject-modal-body p {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+}
+
+.rejection-textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 15px;
+    color: #fff;
+    font-size: 1rem;
+    resize: none;
+    outline: none;
+    transition: all 0.3s;
+    margin-top: 10px;
+}
+
+.rejection-textarea:focus {
+    border-color: #ff4d4d;
+    background: rgba(255, 77, 77, 0.05);
+    box-shadow: 0 0 15px rgba(255, 77, 77, 0.1);
+}
+
+.reject-confirm-btn {
+    background: #ff4757;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.reject-confirm-btn:hover {
+    background: #ff6b81;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+}
+
+.reject-confirm-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.info-icon {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
 @media (max-width: 768px) {
     .content-header {
         flex-direction: column;
