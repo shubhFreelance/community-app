@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI, fundAPI } from '../services/api';
 import './Dashboard.css';
@@ -8,7 +8,13 @@ import './Admin.css';
 const AdminDashboard = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('overview');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = searchParams.get('tab') || 'overview';
+
+    const setActiveTab = (tab) => {
+        setSearchParams({ tab });
+    };
+
     const [analytics, setAnalytics] = useState(null);
     const [pendingUsers, setPendingUsers] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
@@ -183,11 +189,11 @@ const AdminDashboard = () => {
                     <button className={activeTab === 'managers' ? 'active' : ''} onClick={() => setActiveTab('managers')}>
                         👔 Managers
                     </button>
-                    <button className={activeTab === 'funds' ? 'active' : ''} onClick={() => setActiveTab('funds')}>
-                        💰 Fund Tracking
-                    </button>
                     <button className={activeTab === 'broadcast' ? 'active' : ''} onClick={() => setActiveTab('broadcast')}>
                         📢 Broadcast
+                    </button>
+                    <button onClick={() => navigate('/admin')} style={{ marginTop: '20px', background: 'rgba(255,255,255,0.1)' }}>
+                        🔙 Back to Hub
                     </button>
                 </nav>
 
@@ -198,11 +204,10 @@ const AdminDashboard = () => {
 
             <main className="main-content">
                 <header className="content-header">
-                    <h1>{activeTab === 'overview' && 'Dashboard Overview'}
+                    <h1>{activeTab === 'overview' && 'Membership Overview'}
                         {activeTab === 'pending' && 'Pending Verifications'}
                         {activeTab === 'users' && 'User Management'}
                         {activeTab === 'managers' && 'Manager Management'}
-                        {activeTab === 'funds' && 'Fund Dashboard'}
                         {activeTab === 'broadcast' && 'Send Broadcast'}
                     </h1>
                 </header>
@@ -231,26 +236,6 @@ const AdminDashboard = () => {
                                 <span className="stat-value">{analytics.totalManagers}</span>
                             </div>
                         </div>
-
-                        {fundDashboard && (
-                            <div className="fund-summary">
-                                <h3>💰 Fund Summary (This Month)</h3>
-                                <div className="stats-grid">
-                                    <div className="stat-card success">
-                                        <span className="stat-label">Funds Received</span>
-                                        <span className="stat-value">₹{fundDashboard.monthlyFundsReceived.toLocaleString()}</span>
-                                    </div>
-                                    <div className="stat-card danger">
-                                        <span className="stat-label">Expenses</span>
-                                        <span className="stat-value">₹{fundDashboard.monthlyExpenses.toLocaleString()}</span>
-                                    </div>
-                                    <div className="stat-card highlight">
-                                        <span className="stat-label">Current Balance</span>
-                                        <span className="stat-value">₹{fundDashboard.latestBalance.toLocaleString()}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 )}
 
@@ -442,64 +427,6 @@ const AdminDashboard = () => {
                     </div>
                 )}
 
-                {activeTab === 'funds' && (
-                    <div className="tab-content">
-                        <div className="fund-actions">
-                            <button className="action-btn" onClick={() => navigate('/funds/add')}>
-                                ➕ Add Fund Entry
-                            </button>
-                            <button className="action-btn secondary" onClick={() => navigate('/funds/expense')}>
-                                ➖ Add Expense
-                            </button>
-                        </div>
-
-                        {fundDashboard && (
-                            <>
-                                <div className="stats-grid" style={{ marginTop: '20px' }}>
-                                    <div className="stat-card success">
-                                        <span className="stat-label">Monthly Received</span>
-                                        <span className="stat-value">₹{fundDashboard.monthlyFundsReceived.toLocaleString()}</span>
-                                    </div>
-                                    <div className="stat-card danger">
-                                        <span className="stat-label">Monthly Expenses</span>
-                                        <span className="stat-value">₹{fundDashboard.monthlyExpenses.toLocaleString()}</span>
-                                    </div>
-                                    <div className="stat-card highlight">
-                                        <span className="stat-label">Current Balance</span>
-                                        <span className="stat-value">₹{fundDashboard.latestBalance.toLocaleString()}</span>
-                                    </div>
-                                </div>
-
-                                <h3 style={{ color: '#fff', marginTop: '32px', marginBottom: '16px' }}>Recent Transactions</h3>
-                                <div className="transactions-list">
-                                    {fundDashboard.recentTransactions.map((t) => (
-                                        <div key={t._id} className={`transaction-card ${t.type === 'FUND_RECEIVED' ? 'income' : 'expense'}`}>
-                                            <div className="trans-info">
-                                                <span className="trans-type">{t.type === 'FUND_RECEIVED' ? '↗️' : '↘️'}</span>
-                                                <div>
-                                                    <h4>{t.description}</h4>
-                                                    <p>{new Date(t.date).toLocaleDateString()}</p>
-                                                </div>
-                                            </div>
-                                            <div className="trans-amount">
-                                                <span className={t.type === 'FUND_RECEIVED' ? 'positive' : 'negative'}>
-                                                    {t.type === 'FUND_RECEIVED' ? '+' : '-'}₹{t.amount.toLocaleString()}
-                                                </span>
-                                                <small>Balance: ₹{t.balanceAfterTransaction.toLocaleString()}</small>
-                                            </div>
-                                            {t.screenshotUrl && (
-                                                <a href={`http://localhost:5000${t.screenshotUrl}`} target="_blank" rel="noopener noreferrer" className="proof-link">
-                                                    📷 Proof
-                                                </a>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </>
-                        )}
-                    </div>
-                )}
-
                 {activeTab === 'broadcast' && (
                     <div className="tab-content">
                         <form onSubmit={handleBroadcast} className="broadcast-form">
@@ -527,8 +454,9 @@ const AdminDashboard = () => {
                         </form>
                     </div>
                 )}
-            </main>
-        </div>
+
+            </main >
+        </div >
     );
 };
 

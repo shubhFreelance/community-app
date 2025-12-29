@@ -8,6 +8,8 @@ import Register from './pages/Register';
 import UserDashboard from './pages/UserDashboard';
 import CommunityForm from './pages/CommunityForm';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminHome from './pages/AdminHome';
+import AdminFundDashboard from './pages/AdminFundDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
 import { AddFundEntry, AddExpenseEntry } from './pages/FundEntry';
 
@@ -53,7 +55,17 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin" element={
             <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+              <AdminHome />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/membership" element={
+            <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
               <AdminDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/funds" element={
+            <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+              <AdminFundDashboard />
             </ProtectedRoute>
           } />
 

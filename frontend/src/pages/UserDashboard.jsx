@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { profileAPI, userAPI } from '../services/api';
 import './Dashboard.css';
@@ -7,10 +7,16 @@ import './Dashboard.css';
 const UserDashboard = () => {
     const { user, logout, refreshUser } = useAuth();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = searchParams.get('tab') || 'overview';
+
+    const setActiveTab = (tab) => {
+        setSearchParams({ tab });
+    };
+
     const [profile, setProfile] = useState(null);
     const [documents, setDocuments] = useState(null);
     const [notifications, setNotifications] = useState([]);
-    const [activeTab, setActiveTab] = useState('overview');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -163,6 +169,44 @@ const UserDashboard = () => {
                     <div className="tab-content">
                         {renderStatusMessage()}
 
+                        {user?.status === 'APPROVED' && documents && (
+                            <div className="credentials-section animate-slide-up">
+                                <h3>📋 Your Credentials</h3>
+                                <div className="credentials-grid">
+                                    <div className="credential-mini-card">
+                                        <div className="cred-info">
+                                            <span className="cred-icon">🪪</span>
+                                            <span>Community ID Card</span>
+                                        </div>
+                                        <div className="cred-actions">
+                                            <a href={`http://localhost:5000${documents.idCardUrl}`} target="_blank" rel="noopener noreferrer" className="view-link">View</a>
+                                            <a href={`http://localhost:5000${documents.idCardUrl}`} download className="download-link">Download</a>
+                                        </div>
+                                    </div>
+                                    <div className="credential-mini-card">
+                                        <div className="cred-info">
+                                            <span className="cred-icon">📜</span>
+                                            <span>Membership Certificate</span>
+                                        </div>
+                                        <div className="cred-actions">
+                                            <a href={`http://localhost:5000${documents.casteCertificateUrl}`} target="_blank" rel="noopener noreferrer" className="view-link">View</a>
+                                            <a href={`http://localhost:5000${documents.casteCertificateUrl}`} download className="download-link">Download</a>
+                                        </div>
+                                    </div>
+                                    <div className="credential-mini-card">
+                                        <div className="cred-info">
+                                            <span className="cred-icon">🧾</span>
+                                            <span>Approval Receipt</span>
+                                        </div>
+                                        <div className="cred-actions">
+                                            <a href={`http://localhost:5000${documents.membershipApprovalUrl}`} target="_blank" rel="noopener noreferrer" className="view-link">View</a>
+                                            <a href={`http://localhost:5000${documents.membershipApprovalUrl}`} download className="download-link">Download</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="stats-grid">
                             <div className="stat-card">
                                 <span className="stat-label">Member ID</span>
@@ -213,25 +257,40 @@ const UserDashboard = () => {
                         {documents ? (
                             <div className="documents-grid">
                                 <div className="document-card">
-                                    <span className="doc-icon">📜</span>
-                                    <h4>Membership Approval</h4>
-                                    <a href={`http://localhost:5000${documents.membershipApprovalUrl}`} target="_blank" rel="noopener noreferrer" className="download-btn">
-                                        Download PDF
-                                    </a>
+                                    <span className="doc-icon">🧾</span>
+                                    <h4>Approval Receipt</h4>
+                                    <div className="doc-actions-row">
+                                        <a href={`http://localhost:5000${documents.membershipApprovalUrl}`} target="_blank" rel="noopener noreferrer" className="view-btn">
+                                            View
+                                        </a>
+                                        <a href={`http://localhost:5000${documents.membershipApprovalUrl}`} download className="download-btn">
+                                            Download
+                                        </a>
+                                    </div>
                                 </div>
                                 <div className="document-card">
                                     <span className="doc-icon">🪪</span>
                                     <h4>Community ID Card</h4>
-                                    <a href={`http://localhost:5000${documents.idCardUrl}`} target="_blank" rel="noopener noreferrer" className="download-btn">
-                                        Download
-                                    </a>
+                                    <div className="doc-actions-row">
+                                        <a href={`http://localhost:5000${documents.idCardUrl}`} target="_blank" rel="noopener noreferrer" className="view-btn">
+                                            View
+                                        </a>
+                                        <a href={`http://localhost:5000${documents.idCardUrl}`} download className="download-btn">
+                                            Download
+                                        </a>
+                                    </div>
                                 </div>
                                 <div className="document-card">
-                                    <span className="doc-icon">📋</span>
-                                    <h4>Caste Certificate</h4>
-                                    <a href={`http://localhost:5000${documents.casteCertificateUrl}`} target="_blank" rel="noopener noreferrer" className="download-btn">
-                                        Download
-                                    </a>
+                                    <span className="doc-icon">📜</span>
+                                    <h4>Community Certificate</h4>
+                                    <div className="doc-actions-row">
+                                        <a href={`http://localhost:5000${documents.casteCertificateUrl}`} target="_blank" rel="noopener noreferrer" className="view-btn">
+                                            View
+                                        </a>
+                                        <a href={`http://localhost:5000${documents.casteCertificateUrl}`} download className="download-btn">
+                                            Download
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         ) : (

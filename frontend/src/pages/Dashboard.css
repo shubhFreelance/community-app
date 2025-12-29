@@ -418,3 +418,129 @@
         text-align: center;
     }
 }
+
+/* Credentials Section on Overview */
+.credentials-section {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 32px;
+}
+
+.credentials-section h3 {
+    color: #fff;
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+.credentials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.credential-mini-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.credential-mini-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateX(4px);
+}
+
+.cred-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.cred-icon {
+    font-size: 24px;
+}
+
+.cred-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.view-link,
+.download-link {
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.view-link {
+    color: #818cf8;
+    background: rgba(129, 140, 248, 0.1);
+}
+
+.view-link:hover {
+    background: rgba(129, 140, 248, 0.2);
+}
+
+.download-link {
+    color: #34d399;
+    background: rgba(52, 211, 153, 0.1);
+}
+
+.download-link:hover {
+    background: rgba(52, 211, 153, 0.2);
+}
+
+/* Document Tab Updates */
+.doc-actions-row {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.view-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    text-decoration: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.view-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.animate-slide-up {
+    animation: slideUp 0.5s ease forwards;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
