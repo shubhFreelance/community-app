@@ -1,0 +1,401 @@
+/* Admin specific styles */
+.admin-sidebar .role-badge {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: #fff;
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.stat-card.highlight {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
+    border-color: rgba(79, 70, 229, 0.4);
+}
+
+.stat-card.success {
+    background: rgba(34, 197, 94, 0.15);
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.stat-card.danger {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.fund-summary {
+    margin-top: 32px;
+}
+
+.fund-summary h3 {
+    color: #fff;
+    margin-bottom: 16px;
+}
+
+.pending-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.pending-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.pending-info {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 16px;
+}
+
+.pending-photo {
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.pending-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pending-details h4 {
+    color: #fff;
+    margin-bottom: 8px;
+}
+
+.pending-details p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.pending-docs {
+    margin-left: auto;
+}
+
+.doc-link {
+    display: inline-block;
+    background: rgba(79, 70, 229, 0.2);
+    color: #818cf8;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.doc-link:hover {
+    background: rgba(79, 70, 229, 0.3);
+}
+
+.pending-actions {
+    display: flex;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.approve-btn,
+.reject-btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.approve-btn {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: #fff;
+}
+
+.reject-btn {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #fff;
+}
+
+.approve-btn:hover,
+.reject-btn:hover {
+    transform: translateY(-2px);
+}
+
+.approve-btn:disabled,
+.reject-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.data-table th,
+.data-table td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.data-table th {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+.data-table td {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+}
+
+.manager-form,
+.broadcast-form {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+    max-width: 500px;
+}
+
+.permissions-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.permission-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    text-transform: capitalize;
+}
+
+.managers-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.manager-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.manager-card h4 {
+    color: #fff;
+    margin-bottom: 8px;
+}
+
+.manager-card p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.fund-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.action-btn.secondary {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+.transactions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.transaction-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.transaction-card.income {
+    border-left: 3px solid #22c55e;
+}
+
+.transaction-card.expense {
+    border-left: 3px solid #ef4444;
+}
+
+.trans-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.trans-type {
+    font-size: 24px;
+}
+
+.trans-info h4 {
+    color: #fff;
+    font-size: 14px;
+    margin-bottom: 2px;
+}
+
+.trans-info p {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+}
+
+.trans-amount {
+    text-align: right;
+}
+
+.trans-amount span {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.trans-amount .positive {
+    color: #22c55e;
+}
+
+.trans-amount .negative {
+    color: #ef4444;
+}
+
+.trans-amount small {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 11px;
+}
+
+.proof-link {
+    background: rgba(79, 70, 229, 0.2);
+    color: #818cf8;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+
+.proof-link:hover {
+    background: rgba(79, 70, 229, 0.3);
+}
+
+/* Sub-tabs for User Management */
+.sub-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.sub-tab-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.sub-tab-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sub-tab-btn.active {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+/* Search bar */
+.search-container {
+    margin-bottom: 24px;
+}
+
+.search-input {
+    width: 100%;
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 12px 20px;
+    color: #fff;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #4f46e5;
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 32px;
+    padding: 20px;
+}
+
+.pagination-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.page-info {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 500;
+}
