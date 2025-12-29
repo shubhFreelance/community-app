@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { profileAPI } from '../services/api';
+import { profileAPI, BASE_URL } from '../services/api';
 import './Auth.css';
 
 const CommunityForm = () => {
     const { user, refreshUser } = useAuth();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [fetchLoading, setFetchLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
@@ -30,6 +31,44 @@ const CommunityForm = () => {
         aadhaarFile: null,
         profilePhoto: null,
     });
+
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            try {
+                const res = await profileAPI.getMyProfile();
+                if (res.data.success && res.data.data) {
+                    const profile = res.data.data;
+
+                    // Format date for input: YYYY-MM-DD
+                    let formattedDate = '';
+                    if (profile.dateOfBirth) {
+                        formattedDate = new Date(profile.dateOfBirth).toISOString().split('T')[0];
+                    }
+
+                    setFormData({
+                        fullName: profile.fullName || '',
+                        fatherName: profile.fatherName || '',
+                        dateOfBirth: formattedDate,
+                        age: profile.age || '',
+                        gender: profile.gender || '',
+                        address: profile.address || '',
+                        phone: profile.phone || user?.phone || '',
+                    });
+
+                    setPreviews({
+                        profilePhoto: profile.profilePhotoUrl ? `${BASE_URL}${profile.profilePhotoUrl}` : null,
+                        aadhaarFile: profile.aadhaarFileUrl ? `${BASE_URL}${profile.aadhaarFileUrl}` : null,
+                    });
+                }
+            } catch (err) {
+                console.log('No existing profile found or fetch failed');
+            } finally {
+                setFetchLoading(false);
+            }
+        };
+
+        fetchInitialData();
+    }, [user]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -73,11 +112,16 @@ const CommunityForm = () => {
             Object.keys(formData).forEach(key => {
                 data.append(key, formData[key]);
             });
-            data.append('aadhaarFile', files.aadhaarFile);
-            data.append('profilePhoto', files.profilePhoto);
+
+            if (files.aadhaarFile) {
+                data.append('aadhaarFile', files.aadhaarFile);
+            }
+            if (files.profilePhoto) {
+                data.append('profilePhoto', files.profilePhoto);
+            }
 
             await profileAPI.submitProfile(data);
-            setSuccess('Registration submitted successfully! Awaiting verification.');
+            setSuccess('Registration updated successfully! Awaiting verification.');
             await refreshUser();
 
             setTimeout(() => {
@@ -89,6 +133,10 @@ const CommunityForm = () => {
             setLoading(false);
         }
     };
+
+    if (fetchLoading) {
+        return <div className="loading-screen">Loading existing data...</div>;
+    }
 
     return (
         <div className="auth-container" style={{ padding: '40px 20px' }}>
@@ -208,7 +256,7 @@ const CommunityForm = () => {
                                 name="profilePhoto"
                                 onChange={handleFileChange}
                                 accept="image/jpeg,image/png,image/jpg"
-                                required
+                                required={!previews.profilePhoto}
                             />
                             {previews.profilePhoto && (
                                 <img src={previews.profilePhoto} alt="Preview" className="file-preview" />
@@ -223,7 +271,7 @@ const CommunityForm = () => {
                                 name="aadhaarFile"
                                 onChange={handleFileChange}
                                 accept="image/jpeg,image/png,image/jpg,application/pdf"
-                                required
+                                required={!previews.aadhaarFile}
                             />
                             {previews.aadhaarFile && previews.aadhaarFile.startsWith('data:image') && (
                                 <img src={previews.aadhaarFile} alt="Preview" className="file-preview" />
@@ -232,7 +280,7 @@ const CommunityForm = () => {
                     </div>
 
                     <button type="submit" className="auth-btn" disabled={loading}>
-                        {loading ? 'Submitting...' : 'Submit Registration'}
+                        {loading ? 'Submitting...' : formData.fullName ? 'Update Registration' : 'Submit Registration'}
                     </button>
                 </form>
             </div>
