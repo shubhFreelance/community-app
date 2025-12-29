@@ -60,6 +60,10 @@ const AdminDashboard = () => {
     const [aadhaarFile, setAadhaarFile] = useState(null);
     const [profilePhoto, setProfilePhoto] = useState(null);
 
+    // Verification Modal state
+    const [showVerifyModal, setShowVerifyModal] = useState(false);
+    const [verifyingData, setVerifyingData] = useState(null);
+
     const availablePermissions = [
         'verify_users',
         'view_funds',
@@ -107,6 +111,11 @@ const AdminDashboard = () => {
         }
         setAadhaarFile(null);
         setProfilePhoto(null);
+    };
+
+    const handleReview = (user, profile) => {
+        setVerifyingData({ user, profile });
+        setShowVerifyModal(true);
     };
 
     const handleUpdateUser = async (e) => {
@@ -366,18 +375,11 @@ const AdminDashboard = () => {
                                         </div>
                                         <div className="pending-actions">
                                             <button
-                                                className="approve-btn"
-                                                onClick={() => handleApprove(u._id)}
+                                                className="review-btn"
+                                                onClick={() => handleReview(u, profile)}
                                                 disabled={actionLoading === u._id}
                                             >
-                                                ✅ Approve
-                                            </button>
-                                            <button
-                                                className="reject-btn"
-                                                onClick={() => handleReject(u._id)}
-                                                disabled={actionLoading === u._id}
-                                            >
-                                                ❌ Reject
+                                                🔍 Review & Verify
                                             </button>
                                         </div>
                                     </div>
@@ -691,6 +693,90 @@ const AdminDashboard = () => {
                                     <button type="submit" className="save-btn">Update Everything</button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Verification Modal */}
+                {showVerifyModal && verifyingData && (
+                    <div className="modal-overlay">
+                        <div className="modal-content verify-modal expanded-modal">
+                            <div className="modal-header">
+                                <h3>Verify Member: {verifyingData.user?.memberId}</h3>
+                                <button className="close-btn" onClick={() => setShowVerifyModal(false)}>×</button>
+                            </div>
+
+                            <div className="verify-container scrollable-form">
+                                <div className="verify-grid">
+                                    <section className="verify-section">
+                                        <h4>Personal Information</h4>
+                                        <div className="detail-row"><span>Full Name:</span> <strong>{verifyingData.profile?.fullName}</strong></div>
+                                        <div className="detail-row"><span>Father's Name:</span> {verifyingData.profile?.fatherName}</div>
+                                        <div className="detail-row"><span>DOB:</span> {verifyingData.profile?.dateOfBirth && new Date(verifyingData.profile.dateOfBirth).toLocaleDateString()}</div>
+                                        <div className="detail-row"><span>Age:</span> {verifyingData.profile?.age}</div>
+                                        <div className="detail-row"><span>Gender:</span> {verifyingData.profile?.gender}</div>
+                                        <div className="detail-row"><span>Phone:</span> {verifyingData.profile?.phone || verifyingData.user?.phone}</div>
+                                        <div className="detail-row"><span>Email:</span> {verifyingData.user?.email}</div>
+                                        <div className="detail-row"><span>Address:</span> <p>{verifyingData.profile?.address}</p></div>
+                                    </section>
+
+                                    <section className="verify-section">
+                                        <h4>Identity Documents</h4>
+                                        <div className="document-previews">
+                                            <div className="preview-box">
+                                                <label>Profile Photo</label>
+                                                {verifyingData.profile?.profilePhotoUrl ? (
+                                                    <img src={`http://localhost:5000${verifyingData.profile.profilePhotoUrl}`} alt="Profile" className="preview-img" />
+                                                ) : <div className="no-preview">No Photo</div>}
+                                            </div>
+                                            <div className="preview-box">
+                                                <label>Aadhaar Card</label>
+                                                {verifyingData.profile?.aadhaarFileUrl ? (
+                                                    <div className="aadhaar-preview-container">
+                                                        <img src={`http://localhost:5000${verifyingData.profile.aadhaarFileUrl}`} alt="Aadhaar" className="preview-img" />
+                                                        <a href={`http://localhost:5000${verifyingData.profile.aadhaarFileUrl}`} target="_blank" rel="noopener noreferrer" className="verify-view-link">
+                                                            🔍 View Full Size
+                                                        </a>
+                                                    </div>
+                                                ) : <div className="no-preview">No Aadhaar</div>}
+                                            </div>
+                                        </div>
+                                    </section>
+                                </div>
+
+                                <div className="verification-notice">
+                                    ⚠️ Please ensure all details and documents are authentic before proceeding with approval.
+                                </div>
+
+                                <div className="modal-actions verify-actions sticky-actions">
+                                    <button
+                                        type="button"
+                                        className="reject-btn expanded"
+                                        disabled={actionLoading === verifyingData.user?._id}
+                                        onClick={async () => {
+                                            if (window.confirm(`Are you sure you want to REJECT ${verifyingData.profile?.fullName}?`)) {
+                                                await handleReject(verifyingData.user?._id);
+                                                setShowVerifyModal(false);
+                                            }
+                                        }}
+                                    >
+                                        ❌ Reject Member
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="approve-btn expanded"
+                                        disabled={actionLoading === verifyingData.user?._id}
+                                        onClick={async () => {
+                                            if (window.confirm(`Are you sure you want to APPROVE ${verifyingData.profile?.fullName}?`)) {
+                                                await handleApprove(verifyingData.user?._id);
+                                                setShowVerifyModal(false);
+                                            }
+                                        }}
+                                    >
+                                        ✅ Approve Member
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
