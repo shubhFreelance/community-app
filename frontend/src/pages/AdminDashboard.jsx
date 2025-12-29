@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { adminAPI, fundAPI, profileAPI } from '../services/api';
+import { adminAPI, fundAPI, profileAPI, BASE_URL } from '../services/api';
 import './Dashboard.css';
 import './Admin.css';
 
@@ -55,7 +55,9 @@ const AdminDashboard = () => {
         dateOfBirth: '',
         age: '',
         gender: '',
-        address: ''
+        address: '',
+        currentPhoto: '',
+        currentAadhaar: ''
     });
     const [aadhaarFile, setAadhaarFile] = useState(null);
     const [profilePhoto, setProfilePhoto] = useState(null);
@@ -63,6 +65,10 @@ const AdminDashboard = () => {
     // Verification Modal state
     const [showVerifyModal, setShowVerifyModal] = useState(false);
     const [verifyingData, setVerifyingData] = useState(null);
+
+    // View Details Modal state
+    const [showViewModal, setShowViewModal] = useState(false);
+    const [viewingData, setViewingData] = useState(null);
 
     const availablePermissions = [
         'verify_users',
@@ -103,7 +109,9 @@ const AdminDashboard = () => {
                 dateOfBirth: profile?.dateOfBirth ? profile.dateOfBirth.split('T')[0] : '',
                 age: profile?.age || '',
                 gender: profile?.gender || 'Male',
-                address: profile?.address || ''
+                address: profile?.address || '',
+                currentPhoto: profile?.profilePhotoUrl || '',
+                currentAadhaar: profile?.aadhaarFileUrl || ''
             }));
         } catch (err) {
             console.log('Profile fetch failed or not found:', err.message);
@@ -136,9 +144,24 @@ const AdminDashboard = () => {
             await adminAPI.updateUser(selectedUser._id, formData);
             setShowEditModal(false);
             fetchUsers();
+            await loadData(); // Refresh pending users too
             alert('User and Profile updated successfully!');
         } catch (err) {
             alert(err.response?.data?.message || 'Update failed');
+        }
+    };
+
+    const handleViewUser = async (user) => {
+        setActionLoading(user._id);
+        setViewingData({ user, profile: null });
+        setShowViewModal(true);
+        try {
+            const res = await profileAPI.getProfileByUserId(user._id);
+            setViewingData({ user, profile: res.data.data });
+        } catch (err) {
+            console.log('Profile fetch failed:', err.message);
+        } finally {
+            setActionLoading(null);
         }
     };
 
@@ -354,7 +377,7 @@ const AdminDashboard = () => {
                                         <div className="pending-info">
                                             <div className="pending-photo">
                                                 {profile?.profilePhotoUrl && (
-                                                    <img src={`http://localhost:5000${profile.profilePhotoUrl}`} alt="" />
+                                                    <img src={`${BASE_URL}${profile.profilePhotoUrl}`} alt="" />
                                                 )}
                                             </div>
                                             <div className="pending-details">
@@ -367,7 +390,7 @@ const AdminDashboard = () => {
                                             </div>
                                             <div className="pending-docs">
                                                 {profile?.aadhaarFileUrl && (
-                                                    <a href={`http://localhost:5000${profile.aadhaarFileUrl}`} target="_blank" rel="noopener noreferrer" className="doc-link">
+                                                    <a href={`${BASE_URL}${profile.aadhaarFileUrl}`} target="_blank" rel="noopener noreferrer" className="doc-link">
                                                         📄 View Aadhaar
                                                     </a>
                                                 )}
@@ -437,6 +460,7 @@ const AdminDashboard = () => {
                                                     <td>{u.role}</td>
                                                     <td><span className={`status-badge status-${u.status.toLowerCase().replace('_', '-')}`}>{u.status}</span></td>
                                                     <td className="table-actions">
+                                                        <button className="view-mini-btn" onClick={() => handleViewUser(u)} disabled={actionLoading === u._id}>👁️ View</button>
                                                         <button className="edit-mini-btn" onClick={() => handleEditUser(u)}>✏️ Edit</button>
                                                         <button className="delete-mini-btn" onClick={() => handleDeleteUser(u._id)}>🗑️ Delete</button>
                                                     </td>
@@ -670,20 +694,55 @@ const AdminDashboard = () => {
 
                                 <section className="form-section">
                                     <h4>Documents & Media</h4>
-                                    <div className="form-group">
+                                    <div className="form-group edit-doc-group">
                                         <label>Aadhaar Card (Update File)</label>
+                                        <div className="edit-preview-container">
+                                            {aadhaarFile ? (
+                                                <div className="new-preview-tag">New Selection</div>
+                                            ) : editForm.currentAadhaar && (
+                                                <div className="current-preview-tag">Current File</div>
+                                            )}
+
+                                            {aadhaarFile ? (
+                                                aadhaarFile.type?.startsWith('image/') ? (
+                                                    <img src={URL.createObjectURL(aadhaarFile)} alt="Aadhaar Preview" className="preview-img" />
+                                                ) : <div className="no-preview">PDF Selected: {aadhaarFile.name}</div>
+                                            ) : editForm.currentAadhaar ? (
+                                                <img src={`${BASE_URL}${editForm.currentAadhaar}`} alt="Current Aadhaar" className="preview-img" />
+                                            ) : (
+                                                <div className="no-preview">No Aadhaar on file</div>
+                                            )}
+                                        </div>
                                         <input
                                             type="file"
                                             onChange={(e) => setAadhaarFile(e.target.files[0])}
                                             accept=".pdf,.jpg,.jpeg,.png"
+                                            className="file-input-compact"
                                         />
                                     </div>
-                                    <div className="form-group">
+
+                                    <div className="form-group edit-doc-group">
                                         <label>Profile Photo (Update Image)</label>
+                                        <div className="edit-preview-container">
+                                            {profilePhoto ? (
+                                                <div className="new-preview-tag">New Selection</div>
+                                            ) : editForm.currentPhoto && (
+                                                <div className="current-preview-tag">Current Photo</div>
+                                            )}
+
+                                            {profilePhoto ? (
+                                                <img src={URL.createObjectURL(profilePhoto)} alt="New Photo Preview" className="preview-img" />
+                                            ) : editForm.currentPhoto ? (
+                                                <img src={`${BASE_URL}${editForm.currentPhoto}`} alt="Current Photo" className="preview-img" />
+                                            ) : (
+                                                <div className="no-preview">No Profile Photo</div>
+                                            )}
+                                        </div>
                                         <input
                                             type="file"
                                             onChange={(e) => setProfilePhoto(e.target.files[0])}
                                             accept="image/*"
+                                            className="file-input-compact"
                                         />
                                     </div>
                                 </section>
@@ -726,15 +785,15 @@ const AdminDashboard = () => {
                                             <div className="preview-box">
                                                 <label>Profile Photo</label>
                                                 {verifyingData.profile?.profilePhotoUrl ? (
-                                                    <img src={`http://localhost:5000${verifyingData.profile.profilePhotoUrl}`} alt="Profile" className="preview-img" />
+                                                    <img src={`${BASE_URL}${verifyingData.profile.profilePhotoUrl}`} alt="Profile" className="preview-img" />
                                                 ) : <div className="no-preview">No Photo</div>}
                                             </div>
                                             <div className="preview-box">
                                                 <label>Aadhaar Card</label>
                                                 {verifyingData.profile?.aadhaarFileUrl ? (
                                                     <div className="aadhaar-preview-container">
-                                                        <img src={`http://localhost:5000${verifyingData.profile.aadhaarFileUrl}`} alt="Aadhaar" className="preview-img" />
-                                                        <a href={`http://localhost:5000${verifyingData.profile.aadhaarFileUrl}`} target="_blank" rel="noopener noreferrer" className="verify-view-link">
+                                                        <img src={`${BASE_URL}${verifyingData.profile.aadhaarFileUrl}`} alt="Aadhaar" className="preview-img" />
+                                                        <a href={`${BASE_URL}${verifyingData.profile.aadhaarFileUrl}`} target="_blank" rel="noopener noreferrer" className="verify-view-link">
                                                             🔍 View Full Size
                                                         </a>
                                                     </div>
@@ -781,6 +840,68 @@ const AdminDashboard = () => {
                     </div>
                 )}
 
+                {/* View Details Modal */}
+                {showViewModal && viewingData && (
+                    <div className="modal-overlay">
+                        <div className="modal-content verify-modal expanded-modal">
+                            <div className="modal-header">
+                                <h3>View Member Details: {viewingData.user?.memberId}</h3>
+                                <button className="close-btn" onClick={() => setShowViewModal(false)}>×</button>
+                            </div>
+
+                            <div className="verify-container scrollable-form">
+                                <div className="verify-grid">
+                                    <section className="verify-info-section">
+                                        <h4 className="section-title">Personal Information</h4>
+                                        <div className="detail-row"><span>Full Name:</span> <strong>{viewingData.profile?.fullName || 'N/A'}</strong></div>
+                                        <div className="detail-row"><span>Father's Name:</span> <strong>{viewingData.profile?.fatherName || 'N/A'}</strong></div>
+                                        <div className="detail-row"><span>DOB:</span> <strong>{viewingData.profile?.dateOfBirth ? new Date(viewingData.profile.dateOfBirth).toLocaleDateString() : 'N/A'}</strong></div>
+                                        <div className="detail-row"><span>Age:</span> <strong>{viewingData.profile?.age || 'N/A'}</strong></div>
+                                        <div className="detail-row"><span>Gender:</span> <strong>{viewingData.profile?.gender || 'N/A'}</strong></div>
+                                        <div className="detail-row"><span>Phone:</span> <strong>{viewingData.profile?.phone || viewingData.user?.phone || 'N/A'}</strong></div>
+                                        <div className="detail-row"><span>Email:</span> <strong>{viewingData.user?.email}</strong></div>
+                                        <div className="detail-row"><span>Address:</span> <strong>{viewingData.profile?.address || 'N/A'}</strong></div>
+                                        <div className="detail-row"><span>Status:</span> <strong className={`status-badge status-${viewingData.user?.status.toLowerCase().replace('_', '-')}`}>{viewingData.user?.status}</strong></div>
+                                    </section>
+
+                                    <section className="verify-docs-section">
+                                        <h4 className="section-title">Identity Documents</h4>
+                                        <div className="document-previews">
+                                            <div className="preview-box">
+                                                <label>Profile Photo</label>
+                                                {viewingData.profile?.profilePhotoUrl ? (
+                                                    <img src={`${BASE_URL}${viewingData.profile.profilePhotoUrl}`} alt="Profile" className="preview-img" />
+                                                ) : <div className="no-preview">No Photo</div>}
+                                            </div>
+                                            <div className="preview-box">
+                                                <label>Aadhaar Card</label>
+                                                {viewingData.profile?.aadhaarFileUrl ? (
+                                                    <div className="aadhaar-preview-container">
+                                                        <img src={`${BASE_URL}${viewingData.profile.aadhaarFileUrl}`} alt="Aadhaar" className="preview-img" />
+                                                        <a href={`${BASE_URL}${viewingData.profile.aadhaarFileUrl}`} target="_blank" rel="noopener noreferrer" className="verify-view-link">
+                                                            🔍 View Full Size
+                                                        </a>
+                                                    </div>
+                                                ) : <div className="no-preview">No Aadhaar</div>}
+                                            </div>
+                                        </div>
+                                    </section>
+                                </div>
+                            </div>
+
+                            <div className="modal-actions sticky-actions" style={{ justifyContent: 'center' }}>
+                                <button
+                                    type="button"
+                                    className="cancel-btn"
+                                    onClick={() => setShowViewModal(false)}
+                                    style={{ maxWidth: '200px' }}
+                                >
+                                    Close View
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main >
         </div >
     );

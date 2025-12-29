@@ -18,13 +18,14 @@ exports.submitProfile = async (req, res) => {
             });
         }
 
-        // File URLs
+        // File URLs (use new if uploaded, else fallback to existing if present)
         const aadhaarFileUrl = req.files?.aadhaarFile?.[0]?.filename
             ? `/uploads/aadhaar/${req.files.aadhaarFile[0].filename}`
-            : null;
+            : (profile ? profile.aadhaarFileUrl : null);
+
         const profilePhotoUrl = req.files?.profilePhoto?.[0]?.filename
             ? `/uploads/photos/${req.files.profilePhoto[0].filename}`
-            : null;
+            : (profile ? profile.profilePhotoUrl : null);
 
         if (!aadhaarFileUrl || !profilePhotoUrl) {
             return res.status(400).json({

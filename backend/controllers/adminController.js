@@ -367,15 +367,17 @@ exports.updateUser = async (req, res) => {
             gender: gender || (profile ? profile.gender : 'Male'),
             address: address || (profile ? profile.address : ''),
             phone: phone || (profile ? profile.phone : (user.phone || '')),
+            aadhaarFileUrl: profile?.aadhaarFileUrl,
+            profilePhotoUrl: profile?.profilePhotoUrl
         };
 
         // Handle File Uploads
         if (req.files) {
             if (req.files.aadhaarFile) {
-                profileData.aadhaarFileUrl = `/uploads/${req.files.aadhaarFile[0].filename}`;
+                profileData.aadhaarFileUrl = `/uploads/aadhaar/${req.files.aadhaarFile[0].filename}`;
             }
             if (req.files.profilePhoto) {
-                profileData.profilePhotoUrl = `/uploads/${req.files.profilePhoto[0].filename}`;
+                profileData.profilePhotoUrl = `/uploads/photos/${req.files.profilePhoto[0].filename}`;
             }
         }
 
