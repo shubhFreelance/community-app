@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { profileAPI, userAPI } from '../services/api';
+import { profileAPI, userAPI, BASE_URL } from '../services/api';
 import './Dashboard.css';
 
 const UserDashboard = () => {
@@ -179,8 +179,8 @@ const UserDashboard = () => {
                                             <span>Community ID Card</span>
                                         </div>
                                         <div className="cred-actions">
-                                            <a href={`http://localhost:5000${documents.idCardUrl}`} target="_blank" rel="noopener noreferrer" className="view-link">View</a>
-                                            <a href={`http://localhost:5000${documents.idCardUrl}`} download className="download-link">Download</a>
+                                            <a href={`${BASE_URL}${documents.idCardUrl}`} target="_blank" rel="noopener noreferrer" className="view-link">View</a>
+                                            <a href={`${BASE_URL}${documents.idCardUrl}`} download className="download-link">Download</a>
                                         </div>
                                     </div>
                                     <div className="credential-mini-card">
@@ -189,8 +189,8 @@ const UserDashboard = () => {
                                             <span>Membership Certificate</span>
                                         </div>
                                         <div className="cred-actions">
-                                            <a href={`http://localhost:5000${documents.casteCertificateUrl}`} target="_blank" rel="noopener noreferrer" className="view-link">View</a>
-                                            <a href={`http://localhost:5000${documents.casteCertificateUrl}`} download className="download-link">Download</a>
+                                            <a href={`${BASE_URL}${documents.casteCertificateUrl}`} target="_blank" rel="noopener noreferrer" className="view-link">View</a>
+                                            <a href={`${BASE_URL}${documents.casteCertificateUrl}`} download className="download-link">Download</a>
                                         </div>
                                     </div>
                                     <div className="credential-mini-card">
@@ -199,8 +199,8 @@ const UserDashboard = () => {
                                             <span>Approval Receipt</span>
                                         </div>
                                         <div className="cred-actions">
-                                            <a href={`http://localhost:5000${documents.membershipApprovalUrl}`} target="_blank" rel="noopener noreferrer" className="view-link">View</a>
-                                            <a href={`http://localhost:5000${documents.membershipApprovalUrl}`} download className="download-link">Download</a>
+                                            <a href={`${BASE_URL}${documents.membershipApprovalUrl}`} target="_blank" rel="noopener noreferrer" className="view-link">View</a>
+                                            <a href={`${BASE_URL}${documents.membershipApprovalUrl}`} download className="download-link">Download</a>
                                         </div>
                                     </div>
                                 </div>
@@ -228,17 +228,33 @@ const UserDashboard = () => {
                     <div className="tab-content">
                         {profile ? (
                             <div className="profile-card">
-                                <div className="profile-photo">
-                                    <img src={`http://localhost:5000${profile.profilePhotoUrl}`} alt="Profile" />
-                                </div>
-                                <div className="profile-details">
-                                    <h3>{profile.fullName}</h3>
-                                    <p><strong>Father's Name:</strong> {profile.fatherName}</p>
-                                    <p><strong>DOB:</strong> {new Date(profile.dateOfBirth).toLocaleDateString()}</p>
-                                    <p><strong>Age:</strong> {profile.age}</p>
-                                    <p><strong>Gender:</strong> {profile.gender}</p>
-                                    <p><strong>Address:</strong> {profile.address}</p>
-                                    <p><strong>Phone:</strong> {profile.phone}</p>
+                                <div className="profile-container">
+                                    <div className="profile-main-info">
+                                        <div className="profile-photo">
+                                            <img src={`${BASE_URL}${profile.profilePhotoUrl}`} alt="Profile" />
+                                        </div>
+                                        <div className="profile-details">
+                                            <h3>{profile.fullName}</h3>
+                                            <p><strong>Father's Name:</strong> {profile.fatherName}</p>
+                                            <p><strong>DOB:</strong> {new Date(profile.dateOfBirth).toLocaleDateString()}</p>
+                                            <p><strong>Age:</strong> {profile.age}</p>
+                                            <p><strong>Gender:</strong> {profile.gender}</p>
+                                            <p><strong>Address:</strong> {profile.address}</p>
+                                            <p><strong>Phone:</strong> {profile.phone}</p>
+                                        </div>
+                                    </div>
+                                    <div className="profile-documents">
+                                        <h4>Identity Documents</h4>
+                                        <div className="profile-doc-card">
+                                            <div className="doc-header">
+                                                <span className="doc-type">🪪 Aadhaar Card</span>
+                                                <a href={`${BASE_URL}${profile.aadhaarFileUrl}`} target="_blank" rel="noopener noreferrer" className="view-full-btn">View Full Size</a>
+                                            </div>
+                                            <div className="profile-doc-preview">
+                                                <img src={`${BASE_URL}${profile.aadhaarFileUrl}`} alt="Aadhaar Card" />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         ) : (
@@ -260,10 +276,10 @@ const UserDashboard = () => {
                                     <span className="doc-icon">🧾</span>
                                     <h4>Approval Receipt</h4>
                                     <div className="doc-actions-row">
-                                        <a href={`http://localhost:5000${documents.membershipApprovalUrl}`} target="_blank" rel="noopener noreferrer" className="view-btn">
+                                        <a href={`${BASE_URL}${documents.membershipApprovalUrl}`} target="_blank" rel="noopener noreferrer" className="view-btn">
                                             View
                                         </a>
-                                        <a href={`http://localhost:5000${documents.membershipApprovalUrl}`} download className="download-btn">
+                                        <a href={`${BASE_URL}${documents.membershipApprovalUrl}`} download className="download-btn">
                                             Download
                                         </a>
                                     </div>
@@ -272,10 +288,10 @@ const UserDashboard = () => {
                                     <span className="doc-icon">🪪</span>
                                     <h4>Community ID Card</h4>
                                     <div className="doc-actions-row">
-                                        <a href={`http://localhost:5000${documents.idCardUrl}`} target="_blank" rel="noopener noreferrer" className="view-btn">
+                                        <a href={`${BASE_URL}${documents.idCardUrl}`} target="_blank" rel="noopener noreferrer" className="view-btn">
                                             View
                                         </a>
-                                        <a href={`http://localhost:5000${documents.idCardUrl}`} download className="download-btn">
+                                        <a href={`${BASE_URL}${documents.idCardUrl}`} download className="download-btn">
                                             Download
                                         </a>
                                     </div>
@@ -284,10 +300,10 @@ const UserDashboard = () => {
                                     <span className="doc-icon">📜</span>
                                     <h4>Community Certificate</h4>
                                     <div className="doc-actions-row">
-                                        <a href={`http://localhost:5000${documents.casteCertificateUrl}`} target="_blank" rel="noopener noreferrer" className="view-btn">
+                                        <a href={`${BASE_URL}${documents.casteCertificateUrl}`} target="_blank" rel="noopener noreferrer" className="view-btn">
                                             View
                                         </a>
-                                        <a href={`http://localhost:5000${documents.casteCertificateUrl}`} download className="download-btn">
+                                        <a href={`${BASE_URL}${documents.casteCertificateUrl}`} download className="download-btn">
                                             Download
                                         </a>
                                     </div>
