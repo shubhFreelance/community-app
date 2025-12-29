@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fundAPI } from '../services/api';
 import './Auth.css';
@@ -12,13 +12,38 @@ const FundEntry = ({ type = 'receive' }) => {
         date: new Date().toISOString().split('T')[0],
         balanceAfterTransaction: '',
     });
+    const [currentBalance, setCurrentBalance] = useState(0);
     const [screenshot, setScreenshot] = useState(null);
     const [preview, setPreview] = useState(null);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    useEffect(() => {
+        const fetchBalance = async () => {
+            try {
+                const res = await fundAPI.getFundDashboard();
+                setCurrentBalance(res.data.data.latestBalance || 0);
+            } catch (err) {
+                console.error('Failed to fetch balance:', err);
+            }
+        };
+        fetchBalance();
+    }, []);
+
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        const updatedData = { ...formData, [name]: value };
+
+        // Auto-calculate balance if amount changes
+        if (name === 'amount') {
+            const amountVal = parseFloat(value) || 0;
+            const newBalance = type === 'receive'
+                ? currentBalance + amountVal
+                : currentBalance - amountVal;
+            updatedData.balanceAfterTransaction = newBalance;
+        }
+
+        setFormData(updatedData);
     };
 
     const handleFileChange = (e) => {
@@ -108,7 +133,10 @@ const FundEntry = ({ type = 'receive' }) => {
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="balanceAfterTransaction">Remaining Balance After Transaction (₹) *</label>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <label htmlFor="balanceAfterTransaction" style={{ marginBottom: 0 }}>Remaining Balance After Transaction (₹) *</label>
+                            <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)' }}>Current: ₹{currentBalance}</span>
+                        </div>
                         <input
                             type="number"
                             id="balanceAfterTransaction"
@@ -116,8 +144,28 @@ const FundEntry = ({ type = 'receive' }) => {
                             value={formData.balanceAfterTransaction}
                             onChange={handleChange}
                             placeholder="Enter balance after this transaction"
+                            style={{
+                                borderColor: formData.amount && formData.balanceAfterTransaction &&
+                                    parseFloat(formData.balanceAfterTransaction) !== (type === 'receive' ? currentBalance + parseFloat(formData.amount) : currentBalance - parseFloat(formData.amount))
+                                    ? '#ef4444' : ''
+                            }}
                             required
                         />
+                        {formData.amount && formData.balanceAfterTransaction && (
+                            (() => {
+                                const expected = type === 'receive'
+                                    ? currentBalance + parseFloat(formData.amount)
+                                    : currentBalance - parseFloat(formData.amount);
+                                if (parseFloat(formData.balanceAfterTransaction) !== expected) {
+                                    return (
+                                        <p style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px', fontWeight: '500' }}>
+                                            ⚠️ Calculation mismatch! {type === 'receive' ? 'Added' : 'Subtracted'} balance should be ₹{expected}
+                                        </p>
+                                    );
+                                }
+                                return null;
+                            })()
+                        )}
                     </div>
 
                     <div className="form-group file-group">
