@@ -327,3 +327,111 @@ exports.getAnalytics = async (req, res) => {
         });
     }
 };
+
+// @desc    Update user details
+// @route   PUT /api/admin/users/:userId
+// @access  Private (Super Admin)
+exports.updateUser = async (req, res) => {
+    try {
+        const {
+            email, phone, role, status,
+            fullName, fatherName, dateOfBirth, age, gender, address
+        } = req.body;
+
+        const user = await User.findById(req.params.userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found',
+            });
+        }
+
+        // 1. Update User Model
+        if (email) user.email = email;
+        if (phone) user.phone = phone;
+        if (role) user.role = role;
+        if (status) user.status = status;
+
+        await user.save();
+
+        // 2. Update/Create Profile Model
+        let profile = await Profile.findOne({ user: user._id });
+
+        const profileData = {
+            user: user._id,
+            fullName: fullName || (profile ? profile.fullName : ''),
+            fatherName: fatherName || (profile ? profile.fatherName : ''),
+            dateOfBirth: dateOfBirth || (profile ? profile.dateOfBirth : null),
+            age: age || (profile ? profile.age : null),
+            gender: gender || (profile ? profile.gender : 'Male'),
+            address: address || (profile ? profile.address : ''),
+            phone: phone || (profile ? profile.phone : (user.phone || '')),
+        };
+
+        // Handle File Uploads
+        if (req.files) {
+            if (req.files.aadhaarFile) {
+                profileData.aadhaarFileUrl = `/uploads/${req.files.aadhaarFile[0].filename}`;
+            }
+            if (req.files.profilePhoto) {
+                profileData.profilePhotoUrl = `/uploads/${req.files.profilePhoto[0].filename}`;
+            }
+        }
+
+        if (profile) {
+            profile = await Profile.findByIdAndUpdate(profile._id, profileData, { new: true });
+        } else {
+            // Only create if we have enough data (fullName is required at minimum in schema)
+            if (fullName) {
+                profile = await Profile.create(profileData);
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'User and Profile updated successfully',
+            data: {
+                user,
+                profile
+            },
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+};
+
+// @desc    Delete user and data
+// @route   DELETE /api/admin/users/:userId
+// @access  Private (Super Admin)
+exports.deleteUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found',
+            });
+        }
+
+        await Profile.findOneAndDelete({ user: user._id });
+        await Document.findOneAndDelete({ user: user._id });
+        await Notification.deleteMany({ user: user._id });
+        await User.findByIdAndDelete(req.params.userId);
+
+        res.status(200).json({
+            success: true,
+            message: 'User and all associated data deleted successfully',
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+};
+

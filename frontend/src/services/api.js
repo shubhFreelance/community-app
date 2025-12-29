@@ -56,6 +56,10 @@ export const adminAPI = {
         api.put(`/admin/managers/${managerId}/permissions`, { permissions }),
     sendBroadcast: (data) => api.post('/admin/broadcast', data),
     getAnalytics: () => api.get('/admin/analytics'),
+    updateUser: (userId, formData) => api.put(`/admin/users/${userId}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+    deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
 };
 
 // Fund endpoints

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { adminAPI, fundAPI } from '../services/api';
+import { adminAPI, fundAPI, profileAPI } from '../services/api';
 import './Dashboard.css';
 import './Admin.css';
 
@@ -42,6 +42,24 @@ const AdminDashboard = () => {
     // Broadcast form
     const [broadcastForm, setBroadcastForm] = useState({ title: '', message: '' });
 
+    // User Edit Modal state
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [editForm, setEditForm] = useState({
+        email: '',
+        phone: '',
+        role: '',
+        status: '',
+        fullName: '',
+        fatherName: '',
+        dateOfBirth: '',
+        age: '',
+        gender: '',
+        address: ''
+    });
+    const [aadhaarFile, setAadhaarFile] = useState(null);
+    const [profilePhoto, setProfilePhoto] = useState(null);
+
     const availablePermissions = [
         'verify_users',
         'view_funds',
@@ -51,6 +69,81 @@ const AdminDashboard = () => {
     useEffect(() => {
         loadData();
     }, []);
+
+    // ... existing logic ...
+
+    const handleEditUser = async (user) => {
+        setSelectedUser(user);
+        // Set basic user data immediately so modal isn't empty while loading profile
+        setEditForm({
+            email: user.email,
+            phone: user.phone || '',
+            role: user.role,
+            status: user.status,
+            fullName: '',
+            fatherName: '',
+            dateOfBirth: '',
+            age: '',
+            gender: 'Male',
+            address: ''
+        });
+        setShowEditModal(true);
+
+        try {
+            const res = await profileAPI.getProfileByUserId(user._id);
+            const profile = res.data.data;
+            setEditForm(prev => ({
+                ...prev,
+                fullName: profile?.fullName || '',
+                fatherName: profile?.fatherName || '',
+                dateOfBirth: profile?.dateOfBirth ? profile.dateOfBirth.split('T')[0] : '',
+                age: profile?.age || '',
+                gender: profile?.gender || 'Male',
+                address: profile?.address || ''
+            }));
+        } catch (err) {
+            console.log('Profile fetch failed or not found:', err.message);
+            // Form is already pre-filled with basic user data from the first setEditForm call
+        }
+        setAadhaarFile(null);
+        setProfilePhoto(null);
+    };
+
+    const handleUpdateUser = async (e) => {
+        e.preventDefault();
+        try {
+            const formData = new FormData();
+            Object.keys(editForm).forEach(key => {
+                formData.append(key, editForm[key]);
+            });
+
+            if (aadhaarFile) {
+                formData.append('aadhaarFile', aadhaarFile);
+            }
+            if (profilePhoto) {
+                formData.append('profilePhoto', profilePhoto);
+            }
+
+            await adminAPI.updateUser(selectedUser._id, formData);
+            setShowEditModal(false);
+            fetchUsers();
+            alert('User and Profile updated successfully!');
+        } catch (err) {
+            alert(err.response?.data?.message || 'Update failed');
+        }
+    };
+
+    const handleDeleteUser = async (userId) => {
+        if (!window.confirm('Are you sure you want to delete this user? This action is permanent and will delete all associated data.')) return;
+
+        try {
+            await adminAPI.deleteUser(userId);
+            fetchUsers();
+            alert('User deleted successfully');
+        } catch (err) {
+            alert(err.response?.data?.message || 'Delete failed');
+        }
+    };
 
     // Watch for tab/search/page changes to fetch users
     useEffect(() => {
@@ -325,12 +418,13 @@ const AdminDashboard = () => {
                                             <th>Phone</th>
                                             <th>Role</th>
                                             <th>Status</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {allUsers.length === 0 ? (
                                             <tr>
-                                                <td colSpan="5" style={{ textAlign: 'center', padding: '40px' }}>No users found</td>
+                                                <td colSpan="6" style={{ textAlign: 'center', padding: '40px' }}>No users found</td>
                                             </tr>
                                         ) : (
                                             allUsers.map((u) => (
@@ -340,6 +434,10 @@ const AdminDashboard = () => {
                                                     <td>{u.phone}</td>
                                                     <td>{u.role}</td>
                                                     <td><span className={`status-badge status-${u.status.toLowerCase().replace('_', '-')}`}>{u.status}</span></td>
+                                                    <td className="table-actions">
+                                                        <button className="edit-mini-btn" onClick={() => handleEditUser(u)}>✏️ Edit</button>
+                                                        <button className="delete-mini-btn" onClick={() => handleDeleteUser(u._id)}>🗑️ Delete</button>
+                                                    </td>
                                                 </tr>
                                             ))
                                         )}
@@ -452,6 +550,148 @@ const AdminDashboard = () => {
                             </div>
                             <button type="submit" className="auth-btn">📢 Send Broadcast</button>
                         </form>
+                    </div>
+                )}
+
+                {/* Edit User Modal */}
+                {showEditModal && (
+                    <div className="modal-overlay">
+                        <div className="modal-content admin-modal expanded-modal">
+                            <div className="modal-header">
+                                <h3>Edit User & Profile: {selectedUser?.memberId}</h3>
+                                <button className="close-btn" onClick={() => setShowEditModal(false)}>×</button>
+                            </div>
+                            <form onSubmit={handleUpdateUser} className="admin-form scrollable-form">
+                                <section className="form-section">
+                                    <h4>Account Details</h4>
+                                    <div className="form-group">
+                                        <label>Email Address</label>
+                                        <input
+                                            type="email"
+                                            value={editForm.email}
+                                            onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>Role</label>
+                                            <select
+                                                value={editForm.role}
+                                                onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                                            >
+                                                <option value="USER">Member (USER)</option>
+                                                <option value="MANAGER">Manager</option>
+                                                <option value="SUPER_ADMIN">Super Admin</option>
+                                            </select>
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Status</label>
+                                            <select
+                                                value={editForm.status}
+                                                onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                                            >
+                                                <option value="NEW">New</option>
+                                                <option value="PENDING_VERIFICATION">Pending Verification</option>
+                                                <option value="APPROVED">Approved</option>
+                                                <option value="REJECTED">Rejected</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section className="form-section">
+                                    <h4>Profile Information</h4>
+                                    <div className="form-group">
+                                        <label>Full Name</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.fullName}
+                                            onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Father's Name</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.fatherName}
+                                            onChange={(e) => setEditForm({ ...editForm, fatherName: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>Date of Birth</label>
+                                            <input
+                                                type="date"
+                                                value={editForm.dateOfBirth}
+                                                onChange={(e) => setEditForm({ ...editForm, dateOfBirth: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Age</label>
+                                            <input
+                                                type="number"
+                                                value={editForm.age}
+                                                onChange={(e) => setEditForm({ ...editForm, age: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Gender</label>
+                                            <select
+                                                value={editForm.gender}
+                                                onChange={(e) => setEditForm({ ...editForm, gender: e.target.value })}
+                                            >
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Phone Number</label>
+                                        <input
+                                            type="tel"
+                                            value={editForm.phone}
+                                            onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Address</label>
+                                        <textarea
+                                            value={editForm.address}
+                                            onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                                            rows="2"
+                                        />
+                                    </div>
+                                </section>
+
+                                <section className="form-section">
+                                    <h4>Documents & Media</h4>
+                                    <div className="form-group">
+                                        <label>Aadhaar Card (Update File)</label>
+                                        <input
+                                            type="file"
+                                            onChange={(e) => setAadhaarFile(e.target.files[0])}
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Profile Photo (Update Image)</label>
+                                        <input
+                                            type="file"
+                                            onChange={(e) => setProfilePhoto(e.target.files[0])}
+                                            accept="image/*"
+                                        />
+                                    </div>
+                                </section>
+
+                                <div className="modal-actions sticky-actions">
+                                    <button type="button" className="cancel-btn" onClick={() => setShowEditModal(false)}>Cancel</button>
+                                    <button type="submit" className="save-btn">Update Everything</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 )}
 
